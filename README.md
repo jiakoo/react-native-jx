@@ -1,2 +1,1 @@
-"# react-native-jx" 
-# 测试项目# react-native-jx
+# 测试项目
