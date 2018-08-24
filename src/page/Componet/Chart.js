@@ -11,7 +11,7 @@ import Echarts from 'native-echarts'
 
 export default class Chart extends Component{
     constructor(props) {
-        super(props);
+        super(props)
     }
 
     render(){
@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
         margin:15, 
         height:300,
         backgroundColor:'#fff',
-        overflow:'hidden'
     }
 });
   

@@ -123,11 +123,11 @@ export default class Message extends Component{
          
         return(
             <TouchableOpacity activeOpacity={0.9}  style={styles.message} onPress={()=>{
-                // DeviceEventEmitter.emit('dataChange',0)
-                      navigation.navigate('TodoList',{
-                            // title:item.name,
-                            // header:item.creation
-                        })
+                    // DeviceEventEmitter.emit('dataChange',0)
+                    navigation.navigate('TodoList',{
+                        // title:item.name,
+                        // header:item.creation
+                    })
             }}
             >
                 <View style={styles.messageLeft} >
