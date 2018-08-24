@@ -1,0 +1,30 @@
+{
+  "name": "jx",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@stomp/stompjs": "^4.0.6",
+    "native-echarts": "^0.4.0",
+    "react": "16.3.0-alpha.1",
+    "react-native": "0.54.0",
+    "react-native-keyboard-aware-scroll-view": "^0.6.0",
+    "react-native-scrollable-tab-view": "^0.8.0",
+    "react-native-splash-screen": "^3.1.1",
+    "react-native-vector-icons": "^4.6.0",
+    "react-navigation": "^2.8.0",
+    "sockjs-client": "^1.1.5"
+  },
+  "devDependencies": {
+    "babel-jest": "23.4.0",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "23.4.0",
+    "react-test-renderer": "16.3.0-alpha.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
