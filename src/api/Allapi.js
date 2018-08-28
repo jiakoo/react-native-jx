@@ -83,6 +83,12 @@ let changePasswordTo = baseUrl + '/manage/verify/api/changePasswordTo'
 
 let DoubleUrl = baseUrl+'/portfolio'
 
+/**
+ * 待办
+ */
+
+let notice = baseUrl + '/manage/verify/api/data/notice'
+
 export {
     PostionList,
     dataList,
@@ -95,5 +101,6 @@ export {
     Logout,
     changePassword,
     changePasswordTo,
-    DoubleUrl
+    DoubleUrl,
+    notice
 }

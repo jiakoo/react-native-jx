@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component  } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -12,16 +12,19 @@ import {
   FlatList,
   ToastAndroid,
   ProgressBarAndroid,
+  DeviceEventEmitter
 } from 'react-native';
 
 import {PostionList} from '../../api/Allapi';
 import Storage from '../../utils/Storage'
 import Chart from '../Componet/Chart'
 
+
 var IsAndroid = Platform.OS == 'android';
 var {height,width} =  Dimensions.get('window');
 
-export default class InspectionDateList extends Component{
+
+export default class InspectionDateList extends Component {
 
     constructor(props){
         super(props)
@@ -57,7 +60,7 @@ export default class InspectionDateList extends Component{
                         // {id:1,name:'DK52+100~DK52+200',verified:30},
                     ],
                     total:30
-                }
+                },
             },
             refreshing:false,
         }
@@ -93,8 +96,8 @@ export default class InspectionDateList extends Component{
 
 
     render(){
-        return(
-            <View style={styles.container}>
+        return(       
+            <View style={styles.container}>        
                 <FlatList 
                     data={this.state.data.data.positions}
                     renderItem={this.renderItem.bind(this)}
@@ -102,8 +105,8 @@ export default class InspectionDateList extends Component{
                     // numColumns={2}
                     /**
                      *  头尾布局
-                     */
-                    // ListHeaderComponent={this.header}
+                     */                   
+                    ListHeaderComponent={<Chart/>}
                     // ListFooterComponent={this.footer}
                     // initialNumToRender={0}
 
@@ -120,7 +123,6 @@ export default class InspectionDateList extends Component{
     }
 
     renderItem({item,index}){   
-
         var total = this.state.data.data.total;
         var divisor = item.verified/total;
         var percentage = (divisor.toFixed(2)*100).toFixed(0)
@@ -151,7 +153,7 @@ export default class InspectionDateList extends Component{
                 {/* (index==0||index==1)&&styles.box0, index%2!=0&&styles.box1*/}
 
             return(         
-                    <ImageBackground  source={require('../../img/Ipbg.png')} style={{width:width-10,alignSelf:'center',marginTop:5}} resizeMode="cover"  >
+                    <ImageBackground  source={require('../../img/Ipbg.png')} style={{width:width,alignSelf:'center',marginTop:5}} resizeMode="cover"  >
                         <TouchableOpacity activeOpacity={0.9}  style={[styles.box]} onPress={()=>{navigation.navigate('InspectionDateDeatil',{
                             positionId:item.id,
                             title:item.name,
@@ -175,8 +177,8 @@ export default class InspectionDateList extends Component{
                         </TouchableOpacity>
                     </ImageBackground>
             )
-
     }
+
 
     keyExtractor = (item,index) =>  item + index
 
@@ -305,6 +307,7 @@ export default class InspectionDateList extends Component{
             this.setState({
                 data:json,
             })
+            DeviceEventEmitter.emit('chart',json)
         })
 
     }
@@ -336,13 +339,13 @@ const styles = StyleSheet.create({
       flex:1,
       justifyContent: 'flex-start',
       alignItems: 'flex-start',   
-      flexDirection:'row',
+    //   flexDirection:'row',
       backgroundColor:'#4584F7',
     },
     box:{
-        width:width-10,
-        marginLeft:5,
-        marginRight:5,
+        width:width-20,
+        marginLeft:10,
+        marginRight:10,
         padding:10,
         flexDirection:'row',
     },

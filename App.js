@@ -34,6 +34,18 @@ import {perm} from './src/api/Allapi'
 
 import SplashScreen from 'react-native-splash-screen'
 
+import CardStackStyleInterpolator from 'react-navigation/src/views/StackView/StackViewStyleInterpolator';
+
+const TransitionConfiguration = () => ({
+    screenInterpolator: (sceneProps) => {
+        const { scene } = sceneProps;
+        const { route } = scene;
+        const params = route.params || {};
+        const transition = params.transition || 'forHorizontal';
+        return CardStackStyleInterpolator[transition](sceneProps);
+    },
+});
+
 export default class App extends Component {
 
  constructor(props){
@@ -128,7 +140,7 @@ class Numbar extends Component{
     constructor(props){
         super(props)
         this.state={
-            num:9
+            num:0
         }
     }
     render() {
@@ -321,7 +333,7 @@ const Cnav = createStackNavigator({
 },{
     // initialRouteName:'Bottomtab',
     // initialRouteName:'InspectionDatePreview',
-    mode:'modal',
+    mode:'card',
     navigationOptions: {
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.21)',
@@ -333,6 +345,7 @@ const Cnav = createStackNavigator({
           textAlign:'center'
         },
       },
+    // transitionConfig: TransitionConfiguration,
 })
 
 /**

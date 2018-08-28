@@ -11,18 +11,16 @@ import {
   PixelRatio,
   FlatList,
   ToastAndroid,
-  ProgressBarAndroid,
   DeviceEventEmitter,
-  Button,
+  Alert
 } from 'react-native';
 
 var {height,width} =  Dimensions.get('window');
 import Storage from '../../utils/Storage';
-import {DoubleUrl} from '../../api/Allapi'
+import {DoubleUrl,notice} from '../../api/Allapi'
 import SockJS from 'sockjs-client'
 import Stomp from '@stomp/stompjs'
-
-var Num = '@AsyncStorageDemo:Num';
+import formatTime from '../../utils/formatTime'
 
 export default class Message extends Component{
 
@@ -32,33 +30,35 @@ export default class Message extends Component{
             data:[
                 {
                     title:'待办',
-                    time:'2018-08-08 13:05',
+                    time:'2018/08/08 13:05',
                     content:'暂无消息',
-                    num:8,
+                    num:0,
                 },
                 {
-                    title:'提醒提醒提',
-                    time:'2018-08-08 13:05',
+                    title:'提醒',
+                    time:'2018/08/08 13:05',
                     content:'暂无消息',
                     num:0,
                 },
                 {
                     title:'预警',
-                    time:'2018-08-08 13:05',
+                    time:'2018/08/08 13:05',
                     content:'暂无消息',
                     num:0,
                 },
                 {
                     title:'系统消息',
-                    time:'2018-08-08 13:05',
-                    content:'版本升级版本升级版本升级版本升级版本升级了',
-                    num:1,
+                    time:'2018/08/08 13:05',
+                    content:'暂无消息',
+                    num:0,
                 }
             ],
             refreshing:false,
-            num:9
+            AvatarNum:0,
+            verifyDatas:[],        
         }
         navigation = this.props.navigation
+        this.willFocusNum=0
     }
 
     /**
@@ -96,13 +96,10 @@ export default class Message extends Component{
                     data={this.state.data}
                     renderItem={this.renderItem}
                     keyExtractor={this.keyExtractor}
-
                     // initialNumToRender={0}
-
                     //下拉刷新，必须设置refreshing状态
                     onRefresh={this.onRefresh}
                     refreshing={this.state.refreshing}
-
                     //上拉加载
                     onEndReachedThreshold={0.1}
                     onEndReached={()=>{this.onEndReached()}}
@@ -123,10 +120,9 @@ export default class Message extends Component{
          
         return(
             <TouchableOpacity activeOpacity={0.9}  style={styles.message} onPress={()=>{
-                    // DeviceEventEmitter.emit('dataChange',0)
+                   if(item.num == 0){ Alert.alert('','暂无内容'); return false;} 
                     navigation.navigate('TodoList',{
-                        // title:item.name,
-                        // header:item.creation
+                        title:'待办',
                     })
             }}
             >
@@ -203,6 +199,63 @@ export default class Message extends Component{
 
      componentDidMount(){
         this.connect();
+        this.notice();
+        this.willFocusSubscription = this.props.navigation.addListener(
+            'willFocus',()=>{
+                if(this.willFocusNum>0){
+                    this.notice();
+                }     
+                this.willFocusNum++         
+            }
+        )
+     }
+     componentWillUnmount(){
+        this.willFocusSubscription.remove()
+     }
+
+     /**
+      * 待办事项
+      */
+     notice=()=>{
+        Storage.get('vtoken').then((data)=>{
+            let formdata =  new FormData()
+            formdata.append('vtoken'.data)
+            fetch(notice,{
+                method:'POST',
+                body:formdata,
+                headers:{
+                    'Content-Type':'multipart/form-data',
+                },
+            })
+            .then((response) =>{
+                if(response.headers.get('vtoken')!=null){
+                    var vtoken = response.headers.get('vtoken')
+                    Storage.save('vtoken',vtoken)
+                }
+                return response.json()
+            })
+            .then((response)=>{
+
+                var verifyDatas = response.data.verifyDatas;
+                var AvatarNum  = verifyDatas.length;
+                var noticeNum = this.state.data;
+
+                verifyDatas.sort((a,b)=>{
+                    return  this.TimeStamp(b.prevOperateTime) -  this.TimeStamp(a.prevOperateTime) 
+                })
+                noticeNum[0].num = AvatarNum;
+                noticeNum[0].content = '您有'+ AvatarNum + '条待办需处理';
+                noticeNum[0].time = this.TimeChange(verifyDatas[0].prevOperateTime)
+                this.setState({
+                    verifyDatas:verifyDatas,
+                    AvatarNum:AvatarNum,
+                    data:noticeNum,
+                })
+
+                DeviceEventEmitter.emit('dataChange',AvatarNum)
+            })
+        })
+
      }
 
 
@@ -214,7 +267,39 @@ export default class Message extends Component{
         this.stompClient.connect('','', (frame) => {
             this.stompClient.subscribe('/monitor/verify', (response) => {
                 const message = JSON.parse(response.body);
-                console.warn(message)
+                // console.warn(message)
+                var id = message.id;
+                var arr= this.state.verifyDatas
+
+                isInArray =(arr,value) =>{
+                    for(var i = 0; i < arr.length; i++){
+                        if(value === arr[i].id){
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                var flag = isInArray(arr,id)
+
+                if(flag){
+                    for(var i= 0; i<arr.length;i++){
+                        if(arr[i].id == id){
+                            arr.splice(i, 1)
+                            i--;
+                        }
+                    }
+                }else{               
+                     arr.unshift(message)
+                }       
+
+                this.setState({
+                    verifyDatas:arr
+                })
+
+                var AvatarNum = arr.length
+                DeviceEventEmitter.emit('dataChange',AvatarNum)
+              
             });
         },(err)=>{
             console.warn(err)
@@ -225,6 +310,17 @@ export default class Message extends Component{
       */
       disconnect() {
         if (!!this.stompClient) this.stompClient.disconnect();
+      }
+
+      /**
+       *  转化时间戳
+       */
+      TimeStamp=(data)=>{
+         return new Date((data).replace(new RegExp("-","gm"),"/")).getTime()
+        
+      }
+      TimeChange=(data)=>{
+        return data.substring(0,data.length-3).replace(new RegExp("-","gm"),"/")
       }
 
 }

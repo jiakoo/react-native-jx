@@ -258,7 +258,8 @@ export default class InspectionDatePreview extends Component{
                 isVerify:false,
                 isFill:false
             },
-            dataId:false
+            dataId:false,
+            waiting:false
         }
         navigation = this.props.navigation;
         this.from = navigation.getParam('from')
@@ -428,11 +429,12 @@ export default class InspectionDatePreview extends Component{
                      <Panel title="施工作业人员质量责任登记" >
                         <View style={styles.from}>                                              
                             <View style={styles.box}>
-                                <TouchableOpacity activeOpacity={1} onPress={(e)=>{
-                                    console.warn(e)
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                    if( typeof this.state.from.f1.checked == 'undefined'){
+                                    }                           
                                 }}>
                                 <TextInput 
-                                        style={[styles.boxR,{color:'red'}]}
+                                        style={[styles.boxR]}
                                         underlineColorAndroid='transparent'
                                         multiline={true}
                                         textAlignVertical='top'
@@ -513,7 +515,7 @@ export default class InspectionDatePreview extends Component{
 
                         <View style={styles.subjectBGB}>
                            <TouchableOpacity style={[styles.subjectBtn,styles.subjectBlue,]}
-                                onPress={()=>{ 
+                                onPress={()=>{      
                                     this.props.navigation.replace('InspectionDateFrom',{
                                         positionId:this.salt.split('-')[1],
                                         code:this.salt.split('-')[2],
@@ -521,12 +523,17 @@ export default class InspectionDatePreview extends Component{
                                         status:this.status,
                                         salt:this.salt,
                                         saveS:this.saveS,
-                                    })
-                                }}>
+                                    })                               
+                                }}
+                            >
                                 <Text style={styles.subjectBlueT} >修改</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.subjectBtn,styles.subjectBlue,]}
-                                onPress={()=>{ this.operation(1)}}>
+                                onPress={()=>{ 
+                                    this._repeatClick(1)
+                                }}
+                                disabled={this.state.waiting}
+                            >
                                 <Text style={styles.subjectBlueT} >提交</Text>
                             </TouchableOpacity>
                         </View>                      
@@ -535,7 +542,11 @@ export default class InspectionDatePreview extends Component{
                     {this.status == 1 && this.state.subject.isFill ? 
                     <View style={styles.subjectBGB}>
                         <TouchableOpacity style={[styles.subjectBtn,styles.subjectRed,{width:width}]}
-                            onPress={()=>{this.operation(-1)}}>
+                            onPress={()=>{  
+                                this._repeatClick(-1)
+                            }}
+                            disabled={this.state.waiting}
+                        >
                             <Text style={styles.subjectRedT} >撤回</Text>
                         </TouchableOpacity>
                     </View> 
@@ -546,11 +557,18 @@ export default class InspectionDatePreview extends Component{
                     {this.status==1 && this.state.subject.isVerify ?
                     <View style={styles.subjectBGB}>
                         <TouchableOpacity style={[styles.subjectBtn,styles.subjectRed]}
-                            onPress={()=>{this.operation(0)}}>
+                            onPress={()=>{  
+                                this._repeatClick(0)
+                            }}
+                            disabled={this.state.waiting}
+                        >
                             <Text style={styles.subjectRedT} >拒绝</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.subjectBtn,styles.subjectBlue]}
-                             onPress={()=>{this.operation(1)}}
+                              onPress={()=>{  
+                                this._repeatClick(1)
+                             }}
+                             disabled={this.state.waiting}
                         >
                             <Text style={styles.subjectBlueT}>同意</Text>
                         </TouchableOpacity>
@@ -561,11 +579,17 @@ export default class InspectionDatePreview extends Component{
                      {this.status == 2 && this.state.subject.isConfirm ?
                     <View style={styles.subjectBGB}>
                         <TouchableOpacity style={[styles.subjectBtn,styles.subjectRed]}
-                            onPress={()=>{this.operation(0)}}>
+                              onPress={()=>{  
+                                this._repeatClick(0)}}
+                            disabled={this.state.waiting}
+                        >
                             <Text style={styles.subjectRedT} >驳回</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.subjectBtn,styles.subjectBlue]}
-                            onPress={()=>{this.operation(1)}}
+                              onPress={()=>{  
+                                this._repeatClick(1)
+                              }}
+                            disabled={this.state.waiting}
                         >
                             <Text style={styles.subjectBlueT}>归档</Text>
                         </TouchableOpacity>
@@ -664,6 +688,17 @@ export default class InspectionDatePreview extends Component{
         })
     }
 
+    /**
+     * 延迟点击
+     */
+
+    _repeatClick(method){
+        this.setState({waiting: true});
+        this.operation(method)//这里写你原本要交互的方法
+        setTimeout(()=> {
+            this.setState({waiting: false})
+        }, 2000);//设置的时间间隔由你决定
+    }
 
 
      componentDidMount(){

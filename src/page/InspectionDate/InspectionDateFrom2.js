@@ -78,7 +78,7 @@ class From2Input extends Component{
                         {item.title} {item.num?'评定记录：':''}
                     </Text>
                 </View>      
-                {item.num  ?
+                {item.num&&item.num==10  ?
                     new Array(2).fill('').map(()=>{
                         return(
                             <View style={styles.smallInputBox}> 

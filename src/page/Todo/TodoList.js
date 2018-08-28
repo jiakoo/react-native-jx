@@ -11,32 +11,27 @@ import {
   PixelRatio,
   FlatList,
   ToastAndroid,
-  ProgressBarAndroid
+  ProgressBarAndroid,
+  DeviceEventEmitter
 } from 'react-native';
 
 var {height,width} =  Dimensions.get('window');
 import Icon from "react-native-vector-icons/Ionicons"
+import Storage from '../../utils/Storage';
+import {DoubleUrl,notice} from '../../api/Allapi'
 
 export default class TodoList extends Component{
 
     constructor(props){
         super(props)
         this.state ={
-            data:[
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"模拟检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"09/12/2017","title":"钢筋检验批质量验收记录表"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"混凝土（原材料）检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"混凝土（配合比和施工）检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"09/12/2017","title":"混凝土（配合比和施工）检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"混凝土（结构外观和尺寸）检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"模拟检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"09/12/2017","title":"模拟检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"模拟检验批质量验收记录"},
-                {"id":"DK52+461~DK52+470","ga_prefix":"17:30","title":"模拟检验批质量验收记录"},
-            ],
+            data:[],
             refreshing:false,
+            verifyDatas:[],
+            AvatarNum:0
         }
         navigation = this.props.navigation
+   
     }
 
     /**
@@ -58,7 +53,11 @@ export default class TodoList extends Component{
             fontSize:18,
           },
           headerRight:(
-            <TouchableOpacity  onPress={()=>{alert(1)}}>
+            <TouchableOpacity  onPress={()=>{
+                navigation.navigate('TodoDetail',{
+                    transition: 'forVertical',
+                })
+             }}>
                 <Text style={{color:'#fff',padding:10}}>全部处理</Text>                
             </TouchableOpacity>
           ),
@@ -73,44 +72,50 @@ export default class TodoList extends Component{
         return(
             <View style={styles.container}>
                 <FlatList 
-                    data={this.state.data}
+                    data={this.state.verifyDatas}
                     renderItem={this.renderItem}
                     keyExtractor={this.keyExtractor}
-
                     /**
                      *  头尾布局
                      */
                     // ListHeaderComponent={this.header}
                     ListFooterComponent={this.footer}
                     // initialNumToRender={0}
-
                     //下拉刷新，必须设置refreshing状态
                     onRefresh={this.onRefresh}
                     refreshing={this.state.refreshing}
-
                     //上拉加载
                     onEndReachedThreshold={0.1}
                     onEndReached={()=>{this.onEndReached()}}
                  />
-                 <View style={[styles.layout,{backgroundColor:'#0000004a',width:width}]}><Text style={{fontSize:26,color:'#fff'}}>开发中</Text></View>
+                 {/* <View style={[styles.layout,{backgroundColor:'#0000004a',width:width}]}><Text style={{fontSize:26,color:'#fff'}}>开发中</Text></View> */}
             </View>
         )
     }
 
     renderItem({item,index}){   
+        TimeChange=(data)=>{
+            return data.substring(0,data.length-3).replace(new RegExp("-","gm"),"/")
+        }
+
         return(
-            <TouchableOpacity  style={[styles.box, index==0&&styles.box0]} onPress={()=>{navigation.navigate('TodoDetail',{
-                // title:item.name,
-                // header:item.creation
+            <TouchableOpacity  activeOpacity={0.65}  style={[styles.box, index==0&&styles.box0]} onPress={()=>{navigation.navigate('InspectionDatePreview',{
+                    positionId:item.positionId,
+                    code:item.code,
+                    dataId:item.id,
+                    status:item.status,
+                    salt:item.id+'-'+item.positionId+'-'+item.code,
+                    saveS:item.positionId+'-'+item.code,
+                    title:'待办详细'
             })}}
             >
 
                 <Icon name={'ios-list-box'} size={20} style={{color:'#4788FF'}}/>
                 <View style ={styles.right}>
-                    <Text style={styles.boxTitle} numberOfLines={2} >{item.title}</Text>
+                    <Text style={styles.boxTitle} numberOfLines={2} >{item.name}</Text>
                     <View style={styles.boxBody}>
-                        <Text style={styles.gray} numberOfLines={1} >{item.id}</Text>
-                        <Text style={styles.gray} numberOfLines={1} >{item.ga_prefix}</Text>
+                        <Text style={styles.gray} numberOfLines={1} >{item.positionName}</Text>
+                        <Text style={styles.gray} numberOfLines={1} >{TimeChange(item.prevOperateTime)}</Text>
                     </View>
                 </View>
 
@@ -172,10 +177,11 @@ export default class TodoList extends Component{
             //     }
             //  );
             //  this.count++;
+            this.notice();
             this.setState({
                 refreshing: false,
             });
-        }, 1500);
+        }, 500);
     };
 
     /**
@@ -198,18 +204,50 @@ export default class TodoList extends Component{
     /**
      * 加载数据
      */
+    notice=()=>{
+        Storage.get('vtoken').then((data)=>{
+            let formdata =  new FormData()
+            formdata.append('vtoken'.data)
+            fetch(notice,{
+                method:'POST',
+                body:formdata,
+                headers:{
+                    'Content-Type':'multipart/form-data',
+                },
+            })
+            .then((response) =>{
+                if(response.headers.get('vtoken')!=null){
+                    var vtoken = response.headers.get('vtoken')
+                    Storage.save('vtoken',vtoken)
+                }
+                return response.json()
+            })
+            .then((response)=>{
 
+                var verifyDatas = response.data.verifyDatas;
+                var AvatarNum  = verifyDatas.length;
+
+                verifyDatas.sort((a,b)=>{
+                    return  this.TimeStamp(b.prevOperateTime) -  this.TimeStamp(a.prevOperateTime) 
+                })
+
+                // console.warn(verifyDatas)
+
+                this.setState({
+                    verifyDatas:verifyDatas,
+                    AvatarNum:AvatarNum,
+                })
+
+                DeviceEventEmitter.emit('dataChange',AvatarNum)
+            })
+        })
+
+     }
+     TimeStamp=(data)=>{
+        return new Date((data).replace(new RegExp("-","gm"),"/")).getTime()
+     }
      componentDidMount(){
-        // var url = 'http://news-at.zhihu.com/api/4/news/latest';
-        // fetch(url)
-        // .then((response) => response.json())
-        // .then((responseJson) => {
-        //     var json = responseJson['stories'];
-        //     json = json.concat(json);
-        //     this.setState({
-        //         data:json,
-        //     })
-        // })
+        this.notice()
      }
 }
 
