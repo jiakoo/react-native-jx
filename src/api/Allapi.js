@@ -89,6 +89,17 @@ let DoubleUrl = baseUrl+'/portfolio'
 
 let notice = baseUrl + '/manage/verify/api/data/notice'
 
+/**
+ *  统计接口
+ */
+
+ let countComplete = baseUrl+'/manage/verify/api/data/countComplete'
+
+ /**
+  * 全部处理接口
+  */
+let operateAll = baseUrl+'/manage/verify/api/data/operateAll'
+
 export {
     PostionList,
     dataList,
@@ -102,5 +113,7 @@ export {
     changePassword,
     changePasswordTo,
     DoubleUrl,
-    notice
+    notice,
+    countComplete,
+    operateAll
 }

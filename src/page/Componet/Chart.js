@@ -25,9 +25,27 @@ export default class Chart extends Component{
         
         if(this.state.flag){
 
-            var fillOk = 0;
-            this.state.data.data.positions.map(item=>{ 
+            var fillOk = 0,
+                filltotal = 0,
+                group1ok=0,
+                group1total=0,
+                group2ok=0,
+                group2total=0,
+                group3ok=0,
+                group3total=0,
+                group4ok=0,
+                group4total=0;
+                
+
+            this.state.data.data.count.map((item)=>{ 
                 fillOk +=  parseInt(item.verified)  
+                filltotal += parseInt(item.total)
+                switch(item.code){
+                    case '1': group1ok = item.verified;group1total = item.total; break;
+                    case '2': group2ok = item.verified;group2total = item.total; break;
+                    case '3': group3ok = item.verified;group3total = item.total; break;
+                    case '4': group4ok = item.verified;group4total = item.total; break;
+                }
             })
 
 
@@ -59,7 +77,7 @@ export default class Chart extends Component{
                             }
                         },
                         data:[
-                            {value:(1290-fillOk), name:'未完成', selected:true},
+                            {value:(filltotal-fillOk), name:'未完成', selected:true},
                             {value:fillOk, name:'完成'}
                         ]
                     },
@@ -100,14 +118,14 @@ export default class Chart extends Component{
                             }
                         },
                         data:[
-                            {value:335, name:'仰拱'},
-                            {value:310, name:'仰拱填充'},
-                            {value:234, name:'衬砌'},
-                            {value:135, name:'防水和排水'},
-                            {value:1048, name:'仰拱'},
-                            {value:251, name:'仰拱填充'},
-                            {value:147, name:'衬砌'},
-                            {value:102, name:'防水和排水'}
+                            {value:group1ok, name:'仰拱'},
+                            {value:group2ok, name:'仰拱填充'},
+                            {value:group3ok, name:'衬砌'},
+                            {value:group4ok, name:'防水和排水'},
+                            {value:(group1total-group1ok), name:'仰拱'},
+                            {value:(group2total-group2ok), name:'仰拱填充'},
+                            {value:(group3total-group3ok), name:'衬砌'},
+                            {value:(group4total-group4ok), name:'防水和排水'}
                         ]
                     }
                 ]

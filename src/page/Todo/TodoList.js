@@ -27,16 +27,20 @@ export default class TodoList extends Component{
         this.state ={
             data:[],
             refreshing:false,
-            verifyDatas:[],
-            AvatarNum:0
+            verifyDatas:[
+ 
+            ],
+            AvatarNum:0,
+            maxHeight:0,
+            minHeight:0
         }
         navigation = this.props.navigation
-   
     }
 
     /**
      *  标题
      */
+
 
     static navigationOptions = ({ navigation }) => {
         return {
@@ -54,9 +58,15 @@ export default class TodoList extends Component{
           },
           headerRight:(
             <TouchableOpacity  onPress={()=>{
-                navigation.navigate('TodoDetail',{
-                    transition: 'forVertical',
-                })
+                if(navigation.getParam('verifyDatas')){
+                    navigation.navigate('TodoDetail',{
+                        transition: 'forVertical',
+                        verifyDatas:navigation.getParam('verifyDatas'),
+                    })
+                }else{
+                    alert('暂无')
+                    return;
+                }
              }}>
                 <Text style={{color:'#fff',padding:10}}>全部处理</Text>                
             </TouchableOpacity>
@@ -70,11 +80,13 @@ export default class TodoList extends Component{
 
     render(){
         return(
-            <View style={styles.container}>
+            <View style={styles.container} onLayout={(event) =>{this.setState({minHeight:event.nativeEvent.layout.height})}}>
                 <FlatList 
                     data={this.state.verifyDatas}
-                    renderItem={this.renderItem}
+                    renderItem={this.renderItem.bind(this)}
                     keyExtractor={this.keyExtractor}
+                    //列表为空
+                    // ListEmptyComponent={this.ListEmptyComponent}
                     /**
                      *  头尾布局
                      */
@@ -87,16 +99,60 @@ export default class TodoList extends Component{
                     //上拉加载
                     onEndReachedThreshold={0.1}
                     onEndReached={()=>{this.onEndReached()}}
+              
                  />
                  {/* <View style={[styles.layout,{backgroundColor:'#0000004a',width:width}]}><Text style={{fontSize:26,color:'#fff'}}>开发中</Text></View> */}
             </View>
         )
     }
 
-    renderItem({item,index}){   
+    renderItem({item,index}){  
+
         TimeChange=(data)=>{
             return data.substring(0,data.length-3).replace(new RegExp("-","gm"),"/")
         }
+        var color = 'gray';
+        var maxHeight = this.state.maxHeight ;
+        var statusName='';
+        switch(item.status){
+            case 0: 
+                if(item.prevStatus == 1){                               
+                    if(item.prevOperation==0){
+                        //0 // statusName = '未通过';
+                        statusName = '未通过'  
+                        color = 'red'
+
+                    }else if(item.prevOperation== -1){
+                         //撤销 -1 显示是保存
+                        statusName = '保存'
+                        color = 'blue'
+                    }
+                    break;
+                }else if(item.prevStatus == 2){
+                    // statusName = '驳回';
+                    statusName='驳回'
+                    color='red'
+                    break;
+                }else if(item.prevStatus == 0){
+                    // statusName = '已保存';
+                    statusName='保存'
+                    color = 'blue'
+                    break;
+                };
+            break;    
+            case 1:
+            // statusName = '待审核';
+            statusName='待审核'
+            color='yellow'
+            break;
+            case 2:
+            // statusName = '已通过';
+            statusName='已通过'
+            color = 'green'
+            break;
+        }
+
+
 
         return(
             <TouchableOpacity  activeOpacity={0.65}  style={[styles.box, index==0&&styles.box0]} onPress={()=>{navigation.navigate('InspectionDatePreview',{
@@ -111,8 +167,9 @@ export default class TodoList extends Component{
             >
 
                 <Icon name={'ios-list-box'} size={20} style={{color:'#4788FF'}}/>
-                <View style ={styles.right}>
+                <View style ={styles.right}  onLayout={(event) =>{maxHeight+=event.nativeEvent.layout.height;this.setState({maxHeight})}}>
                     <Text style={styles.boxTitle} numberOfLines={2} >{item.name}</Text>
+                    <Text style={[styles.boxStatus,styles[color]]} >{statusName}</Text>
                     <View style={styles.boxBody}>
                         <Text style={styles.gray} numberOfLines={1} >{item.positionName}</Text>
                         <Text style={styles.gray} numberOfLines={1} >{TimeChange(item.prevOperateTime)}</Text>
@@ -121,6 +178,8 @@ export default class TodoList extends Component{
 
             </TouchableOpacity>
         )
+
+       
     }
 
     keyExtractor = (item,index) =>  item + index
@@ -143,20 +202,36 @@ export default class TodoList extends Component{
     /**
      * 尾布局
      */
-    footer = () => {
+    footer = () => {  
+        if(this.state.verifyDatas.length != 0&&this.state.maxHeight>this.state.minHeight-80){
+            return (
+                <Text style={{
+                    // marginTop: 10,
+                    // backgroundColor: '#F2F2F2',
+                    color: '#666',
+                    fontSize: 12,
+                    textAlign: 'center',
+                    textAlignVertical: 'center',
+                    height: 30,
+                }}>--我是底线--</Text>
+            )
+        }else{
+            return null
+        }
+    };
+    /**
+     * 列表为空
+     */
+    ListEmptyComponent = () =>{
         return (
             <Text style={{
-                // marginTop: 10,
-                // backgroundColor: '#F2F2F2',
                 color: '#666',
                 fontSize: 12,
                 textAlign: 'center',
-                textAlignVertical: 'center',
                 height: 30,
-            }}>--我是底线--</Text>
+            }}>暂无数据</Text>
         )
-    };
-
+    }
     /**
      * 下拉属性
      */
@@ -207,7 +282,7 @@ export default class TodoList extends Component{
     notice=()=>{
         Storage.get('vtoken').then((data)=>{
             let formdata =  new FormData()
-            formdata.append('vtoken'.data)
+            formdata.append('vtoken',data)
             fetch(notice,{
                 method:'POST',
                 body:formdata,
@@ -237,12 +312,13 @@ export default class TodoList extends Component{
                     verifyDatas:verifyDatas,
                     AvatarNum:AvatarNum,
                 })
-
+                this.props.navigation.setParams({verifyDatas: verifyDatas})
                 DeviceEventEmitter.emit('dataChange',AvatarNum)
             })
         })
 
      }
+     
      TimeStamp=(data)=>{
         return new Date((data).replace(new RegExp("-","gm"),"/")).getTime()
      }
@@ -281,10 +357,15 @@ const styles = StyleSheet.create({
         color:'#333',
         fontSize:16,
     },
+    boxStatus:{
+        marginTop:6,
+        fontSize:13,
+        marginTop:6,
+    },
     boxBody:{
         flexDirection:'row',
         justifyContent:'space-between',
-        marginTop:10,
+        marginTop:6,
     },
     gray:{
         color:'#666666',
@@ -298,6 +379,18 @@ const styles = StyleSheet.create({
         height:height,
         justifyContent:'center',
         alignItems:'center'
+    },
+    red:{
+        color:'#FE7257'
+    },
+    blue:{
+        color:'#4788FF'
+    },
+    green:{
+        color:'#19C147'
+    },
+    yellow:{
+        color:'#FFB71C'
     }
   });
   

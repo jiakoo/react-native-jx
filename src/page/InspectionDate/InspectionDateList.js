@@ -15,7 +15,7 @@ import {
   DeviceEventEmitter
 } from 'react-native';
 
-import {PostionList} from '../../api/Allapi';
+import {PostionList,countComplete} from '../../api/Allapi';
 import Storage from '../../utils/Storage'
 import Chart from '../Componet/Chart'
 
@@ -307,11 +307,54 @@ export default class InspectionDateList extends Component {
             this.setState({
                 data:json,
             })
-            DeviceEventEmitter.emit('chart',json)
         })
 
     }
 
+    /**
+     * 统计
+     */
+    countComplete = (data) =>{
+        data = data || ''
+        let fromdata = new FormData()
+        fromdata.append('vtoken',data)
+
+        fetch(countComplete,
+            {
+                method:'POST',
+                body:fromdata,
+                headers:{
+                    'Content-Type':'multipart/form-data',
+                }
+            }
+        )
+        .then((response) => {
+            // console.warn(response.headers.get('vtoken')) 
+            if(response.headers.get('vtoken')!=null){
+                var vtoken = response.headers.get('vtoken')
+                Storage.save('vtoken',vtoken)
+            }
+            return response.json()
+        })
+        .then((responseJson) => {
+            // console.warn(responseJson)
+            if(responseJson.statusCode == 301){
+                var next =  responseJson.data.next,
+                factor = responseJson.data.factor,
+                ssid = responseJson.data.ssid;
+                navigation.navigate('Login',{
+                    factor:factor,
+                    ssid:ssid
+                })   
+            }
+            var json = responseJson;
+            // this.setState({
+            //     data:json,
+            // })
+            // console.warn(json)
+            DeviceEventEmitter.emit('chart',json)
+        })
+    }
 
 
      componentDidMount(){
@@ -320,8 +363,10 @@ export default class InspectionDateList extends Component {
                 Storage.get('vtoken').then(data=>{
                     if(data!=null){
                         this.ReqFn(data)
+                        this.countComplete(data)
                     }else{
                         this.ReqFn()
+                        this.countComplete()
                     }
                 })
             }

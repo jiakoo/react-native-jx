@@ -55,7 +55,8 @@ export default class Message extends Component{
             ],
             refreshing:false,
             AvatarNum:0,
-            verifyDatas:[],        
+            verifyDatas:[],    
+            subject:{}    
         }
         navigation = this.props.navigation
         this.willFocusNum=0
@@ -208,6 +209,14 @@ export default class Message extends Component{
                 this.willFocusNum++         
             }
         )
+        Storage.get('subject').then((data)=>{
+            if(data!=null){
+                // console.warn(data)
+                this.setState({
+                    subject:data
+                })
+            }
+        })
      }
      componentWillUnmount(){
         this.willFocusSubscription.remove()
@@ -268,39 +277,43 @@ export default class Message extends Component{
             this.stompClient.subscribe('/monitor/verify', (response) => {
                 const message = JSON.parse(response.body);
                 // console.warn(message)
-                var id = message.id;
-                var arr= this.state.verifyDatas
+                // var id = message.id;
+                // var arr= this.state.verifyDatas
 
-                isInArray =(arr,value) =>{
-                    for(var i = 0; i < arr.length; i++){
-                        if(value === arr[i].id){
-                            return true;
+                var arr = this.state.verifyDatas;
+                message.map((item,index)=>{
+                    var id = item.id;         
+                    isInArray =(arr,value) =>{
+                        for(var i = 0; i < arr.length; i++){
+                            if(value === arr[i].id){
+                                return true;
+                            }
                         }
+                        return false;
                     }
-                    return false;
-                }
 
-                var flag = isInArray(arr,id)
-
-                if(flag){
-                    for(var i= 0; i<arr.length;i++){
-                        if(arr[i].id == id){
-                            arr.splice(i, 1)
-                            i--;
+                    var flag = isInArray(arr,id)
+                    if(flag){
+                        for(var i= 0; i<arr.length;i++){
+                            if(arr[i].id == id){
+                                arr.splice(i, 1)
+                                i--;
+                            }
                         }
-                    }
-                }else{               
-                     arr.unshift(message)
-                }       
-
+                    }else{               
+                        arr.unshift(item)
+                    }       
+        
+                })
                 this.setState({
                     verifyDatas:arr
-                })
-
+                })       
                 var AvatarNum = arr.length
-                DeviceEventEmitter.emit('dataChange',AvatarNum)
-              
-            });
+                if(!(this.state.subject.isFill&&this.state.subject.isVerify) || !(this.state.subject.isVerify&&this.state.subject.isConfirm)){
+                    DeviceEventEmitter.emit('dataChange',AvatarNum)  
+                }  
+            })
+            
         },(err)=>{
             console.warn(err)
         });
