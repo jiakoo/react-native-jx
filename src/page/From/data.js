@@ -70,7 +70,7 @@ var json = {
                         title:'预埋件',
                         subTitle:[
                             {title:'中心位置 （3）',num:5},
-                            {title:'尺  寸（+10  0）',num:5}
+                            {title:'外露长度（+10  0）',num:5}
                         ]
                     },
                 ]
@@ -310,50 +310,7 @@ var json = {
                 ]
             
             },
-
-        ],
-        count:10
-    },
-    table2_2:{
-        master:[
-            {title:'钢筋质量 第8.3.1条',num:1},
-            {title:'钢筋品种、级别、规格和数量 第8.3.2条',num:1},
-            {title:'钢筋接头位置及连接方式 第8.3.3条',num:1},
-            {title:'钢筋机械连接用套筒及锁母材料品种、规格 第8.3.4条',num:1},
-            {title:'钢筋接头技术要求与外观质量 第8.3.5条',num:1},
-            {title:'钢筋加工 第8.3.6条',num:1},
-            {title:'丝头加工的外观质量及尺寸 第8.3.7条',num:1},
-            {title:'接头拧紧力矩要求 第8.3.8条',num:1},
-            {title:'钢筋保护层垫块材质、数量、位置 第8.3.9条',num:1},
-            {title:'钢筋接头设置位置 第8.3.10条',num:1},
-        ],
-        ordinary:[
-            {
-                title:'加工允许偏差(mm)',
-                subTitle:[
-                    { title:'受力钢筋全长 （±10）',num:5},
-                    { title:'弯起筋弯折位置 （20）',num:5},
-                    { title:'箍筋内净尺寸 （±3）',num:5},
-                ]
-            },
-            {  
-                title:'加工允许偏差(mm)',
-                subTitle:[
-                    { title:'双排钢筋的上排钢筋与下排钢筋间距 （±5）',num:5},
-                    {
-                        title:'同一排中受力钢筋水平间距',
-                        subTitle:[
-                            { title:'拱部 （±10）',num:5},
-                            { title:'边墙 （±20）',num:5},
-                        ]
-                    },
-                    { title:'分布钢筋间距 （±20）',num:5},
-                    { title:'箍筋间距 （±20）',num:5},
-                    { title:'钢筋保护层厚度 （+10 -5）',num:5},
-                ]
-            
-            },
-            {title:'钢筋外观质量',num:1}
+            { title:'钢筋外观质量 第8.3.13条',num:1}
 
         ],
         count:10
@@ -364,9 +321,9 @@ var json = {
             {
                 title:'矿物掺和料性能 第8.4.2条',
                 subTitle:[
-                    {title:'粉煤灰质量',num:1},
-                    {title:'磨细矿渣粉质量',num:1},
-                    {title:'硅灰质量',num:1},
+                    {title:'粉煤灰',num:1},
+                    {title:'磨细矿渣粉',num:1},
+                    {title:'硅灰',num:1},
                 ]
             },
             {title:'细骨料质量 第8.4.3条',num:1},
@@ -649,7 +606,7 @@ var json = {
             {title:'墙背排水设施施工要求 第10.6.4条',num:1},
             {title:'回填分层厚度及施工要求 第10.6.5条',num:1},
         ],
-        count:3
+        count:5
     }, 
     table3_8:{
         master:[
@@ -841,13 +798,9 @@ var json = {
         ],
         count:4
     }, 
-           
-   
-
-
 
 }
-
+//例子
 const ex ={
     table1_1:{
         master:[],

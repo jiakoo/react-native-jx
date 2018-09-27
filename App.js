@@ -36,6 +36,8 @@ import SplashScreen from 'react-native-splash-screen'
 
 import CardStackStyleInterpolator from 'react-navigation/src/views/StackView/StackViewStyleInterpolator';
 
+import codePush from 'react-native-code-push'
+
 const TransitionConfiguration = () => ({
     screenInterpolator: (sceneProps) => {
         const { scene } = sceneProps;
@@ -53,7 +55,7 @@ export default class App extends Component {
      this.state={
          isLogin:true
      }
- }
+  }
 
   render() {
       if(this.state.isLogin){
@@ -119,7 +121,17 @@ export default class App extends Component {
 
   }
 
+
   componentDidMount(){
+    codePush.sync({
+        // updateDialog: {
+        //   descriptionPrefix:'\n\n更新内容：\n',
+        //   title:'更新',
+        //   mandatoryUpdateMessage:'更新新版本',
+        //   mandatoryContinueButtonLabel:'更新',
+        // },
+        mandatoryInstallMode:codePush.InstallMode.IMMEDIATE,
+      });
 
     setTimeout(()=>{ SplashScreen.hide()},500)
     

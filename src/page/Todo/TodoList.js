@@ -313,7 +313,7 @@ export default class TodoList extends Component{
                     AvatarNum:AvatarNum,
                 })
                 this.props.navigation.setParams({verifyDatas: verifyDatas})
-                DeviceEventEmitter.emit('dataChange',AvatarNum)
+                // DeviceEventEmitter.emit('dataChange',AvatarNum)
             })
         })
 
@@ -323,7 +323,11 @@ export default class TodoList extends Component{
         return new Date((data).replace(new RegExp("-","gm"),"/")).getTime()
      }
      componentDidMount(){
-        this.notice()
+        this.willFocusSubscription = this.props.navigation.addListener(
+            'willFocus',()=>{
+                this.notice();     
+            }
+        )
      }
 }
 

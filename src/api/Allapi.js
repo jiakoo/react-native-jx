@@ -1,6 +1,6 @@
 
-let baseUrl = 'http://10.0.15.35:8080/jx';
-// let baseUrl = 'http://101.200.192.212:8010/jx';
+// let baseUrl = 'http://10.0.15.41:8080/jx';  //生产版本
+let baseUrl = 'http://101.200.192.212:8010/jx'; //发布版本
 
 /**
  * 施工缝位置列表

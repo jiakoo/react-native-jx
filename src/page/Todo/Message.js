@@ -30,25 +30,25 @@ export default class Message extends Component{
             data:[
                 {
                     title:'待办',
-                    time:'2018/08/08 13:05',
+                    time:'刚刚',
                     content:'暂无消息',
                     num:0,
                 },
                 {
                     title:'提醒',
-                    time:'2018/08/08 13:05',
+                    time:'刚刚',
                     content:'暂无消息',
                     num:0,
                 },
                 {
                     title:'预警',
-                    time:'2018/08/08 13:05',
+                    time:'刚刚',
                     content:'暂无消息',
                     num:0,
                 },
                 {
                     title:'系统消息',
-                    time:'2018/08/08 13:05',
+                    time:'刚刚',
                     content:'暂无消息',
                     num:0,
                 }
@@ -200,13 +200,9 @@ export default class Message extends Component{
 
      componentDidMount(){
         this.connect();
-        this.notice();
         this.willFocusSubscription = this.props.navigation.addListener(
             'willFocus',()=>{
-                if(this.willFocusNum>0){
-                    this.notice();
-                }     
-                this.willFocusNum++         
+                this.notice();
             }
         )
         Storage.get('subject').then((data)=>{
@@ -252,15 +248,21 @@ export default class Message extends Component{
                 verifyDatas.sort((a,b)=>{
                     return  this.TimeStamp(b.prevOperateTime) -  this.TimeStamp(a.prevOperateTime) 
                 })
-                noticeNum[0].num = AvatarNum;
-                noticeNum[0].content = '您有'+ AvatarNum + '条待办需处理';
-                noticeNum[0].time = this.TimeChange(verifyDatas[0].prevOperateTime)
+                
+                if(verifyDatas.length == 0){
+                    noticeNum[0].num = AvatarNum;
+                    noticeNum[0].content = '暂无消息';
+                    noticeNum[0].time = '刚刚'
+                }else{
+                    noticeNum[0].num = AvatarNum;
+                    noticeNum[0].content = '您有'+ AvatarNum + '条待办需处理';
+                    noticeNum[0].time = this.TimeChange(verifyDatas[0].prevOperateTime)
+                }
                 this.setState({
                     verifyDatas:verifyDatas,
                     AvatarNum:AvatarNum,
                     data:noticeNum,
                 })
-
                 DeviceEventEmitter.emit('dataChange',AvatarNum)
             })
         })
@@ -281,7 +283,59 @@ export default class Message extends Component{
                 // var arr= this.state.verifyDatas
 
                 var arr = this.state.verifyDatas;
-                message.map((item,index)=>{
+                var messageFilter = [];
+                var isFill =  this.state.subject.isFill,
+                    isVerify = this.state.subject.isVerify,
+                    isConfirm  = this.state.subject.isConfirm;
+
+                // console.warn(message)
+
+                message.map(item=>{
+                    switch(item.status){
+                        case 0: 
+                            if(item.prevStatus == 1){                               
+                                if(item.prevOperation==0&& (isFill || isVerify)){
+                                    //0 // statusName = '未通过';        
+                                    messageFilter.push(item)
+                                }else if(item.prevOperation== -1&&(isFill || isVerify)){
+                                    //撤销 -1 显示是保存
+                                    messageFilter.push(item)
+                                }
+                                break;
+                            }else if(item.prevStatus == 2 && (isFill || isConfirm )){
+                                // statusName = '驳回';
+                                messageFilter.push(item)
+                                break;
+                            }else if(item.prevStatus == 0 &&isFill ){
+                                // statusName = '已保存';
+                                messageFilter.push(item)
+                                break;
+                            };                    
+                        break;    
+                        case 1:
+                        // statusName = '待审核';
+                        if(isFill||isVerify){
+                            messageFilter.push(item)
+                        }
+                        break;
+                        case 2:
+                        // statusName = '已通过';
+                        if(isConfirm||isVerify){
+                            messageFilter.push(item)
+                        }
+                        break;
+                        case 3:
+                        if(isConfirm){
+                            messageFilter.push(item)
+                        }
+                        break;
+                    }
+
+                })
+
+                // console.warn(messageFilter)
+
+                messageFilter.map((item,index)=>{
                     var id = item.id;         
                     isInArray =(arr,value) =>{
                         for(var i = 0; i < arr.length; i++){
@@ -305,10 +359,24 @@ export default class Message extends Component{
                     }       
         
                 })
-                this.setState({
-                    verifyDatas:arr
-                })       
+
                 var AvatarNum = arr.length
+                var noticeNum = this.state.data;
+                if(arr.length == 0){
+                    noticeNum[0].num = AvatarNum;
+                    noticeNum[0].content = '暂无消息';
+                    noticeNum[0].time = '刚刚'
+                }else{
+                    noticeNum[0].num = AvatarNum;
+                    noticeNum[0].content = '您有'+ AvatarNum + '条待办需处理';
+                    noticeNum[0].time = this.TimeChange(arr[0].prevOperateTime)
+                }
+
+                this.setState({
+                    verifyDatas:arr,
+                    data:noticeNum
+                })       
+               
                 if(!(this.state.subject.isFill&&this.state.subject.isVerify) || !(this.state.subject.isVerify&&this.state.subject.isConfirm)){
                     DeviceEventEmitter.emit('dataChange',AvatarNum)  
                 }  

@@ -113,7 +113,7 @@ export default class InspectionDateFrom5 extends Component{
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.button} onPress={()=>{
+                    <TouchableOpacity style={[styles.button,styles.buttonW]} onPress={()=>{
                             // this.props.navigation.navigate('InspectionDateDeatil')
                             // this.props.navigation.pop(5)
                             Storage.get('vtoken').then(data=>{
@@ -121,7 +121,7 @@ export default class InspectionDateFrom5 extends Component{
                             })
                             
                         }}>
-                            <Text style={styles.buttontext}>保存</Text>
+                            <Text style={[styles.buttontext,styles.buttonWtext]}>保存</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity style={styles.button} onPress={()=>{
@@ -433,6 +433,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',  
         backgroundColor:'#fff',
         color:'#000',
+    },
+    buttonW:{
+        backgroundColor:'#00bb00'
+    },
+    buttonWtext:{
+
     }
   });
   

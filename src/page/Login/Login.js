@@ -41,6 +41,7 @@ export default class Login extends Component{
             <KeyboardAwareScrollView  style={{backgroundColor:'#256AF5'}}> 
                 <ImageBackground source={require('../../img/bg.jpg')}  style={{height:height}}>
                     <View style={styles.container}>     
+                    
                       
                             {/* <Image source={require('../../img/logo.png')} style={styles.logo} /> */}
                             {/* <Text style={styles.logintitle}>智能化信息施工平台</Text> */}

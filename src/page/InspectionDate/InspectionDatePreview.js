@@ -14,8 +14,8 @@ import {
   ProgressBarAndroid,
   TextInput,
   ScrollView,
-  Picker,
-  Alert
+  Alert,
+  DeviceEventEmitter
 } from 'react-native';
 
 var {height,width} =  Dimensions.get('window');
@@ -35,8 +35,13 @@ class From2Input extends Component{
         this.saveS = this.props.saveS
         this.code = this.salt.split('-')[2]
 
+
         this.onChangeText=(text,name)=>{
             this.props.onChangeText(text,name)
+        }
+
+        this.updataMark = val =>{
+            this.props.updataMark(val)
         }
         
         var master = this.flag == 2? json['table'+this.code].ordinary:json['table' + this.code].master
@@ -46,7 +51,10 @@ class From2Input extends Component{
                 master:master
             },
             from:{},
-            count:json['table'+this.code].count
+            IsChecked:[],
+            count:json['table'+this.code].count,
+            subject:{},
+            verifyDate:{}
         }
     
     }
@@ -57,14 +65,60 @@ class From2Input extends Component{
         }     
     }
 
+
+    ArrayRemove = (arr,item) =>{
+        var index = arr.indexOf(item)
+        if(index>-1){
+            arr.splice(index,1)
+        }
+     }
+
+     IsAddMark=(val)=>{
+        var isVerify = this.state.subject.isVerify,
+        status  = this.state.verifyDate.status;
+
+        if(!isVerify&&status!=1){return}
+        var ArrIsChecked = this.state.IsChecked
+        if(ArrIsChecked.includes(val)){
+            this.ArrayRemove(ArrIsChecked,val)
+        }else{
+            ArrIsChecked.push(val)
+        }   
+        this.updataMark(ArrIsChecked)
+     }
+    
+     IsinArray= (val) =>{
+         return this.state.IsChecked.includes(val)
+     }
+
     componentWillMount(){
-        Storage.get(this.saveS).then(data=>{
+
+        Storage.get('subject').then((data)=>{
             if(data!=null){
                 this.setState({
-                    from:data
+                    subject:data
                 })
             }
         })
+
+        this.listener = DeviceEventEmitter.addListener('makeFrom', (from) => {
+            this.setState({
+                from:from
+            });
+        })
+
+        this.listener = DeviceEventEmitter.addListener('makeCheck', (IsChecked) => {
+            this.setState({
+                IsChecked:IsChecked
+            });
+        })
+
+        this.listener = DeviceEventEmitter.addListener('verifyDate', (verifyDate) => {
+            this.setState({
+                verifyDate:verifyDate
+            });
+        })
+
     }
 
     render(){
@@ -90,19 +144,25 @@ class From2Input extends Component{
                                 {item.num ? new Array(5).fill('').map((item,index,arr)=>{
                                     var num = ++count;
                                     return (
+                                        <TouchableOpacity  activeOpacity={1} onPress={()=>{
+                                            var val = 'd'+num;
+                                            this.IsAddMark(val)
+                                        }} >                                     
                                         <TextInput 
-                                        key={index+'i1'}
-                                        style={arr.length==5?styles.smallInput:styles.boxBottom}
-                                        underlineColorAndroid='transparent'
-                                        multiline={true}
-                                        textAlignVertical={arr.length==5?'center':'top'}
-                                        returnKeyType="next"
-                                        blurOnSubmit={true}
-                                        defaultValue={this.state.from['d'+num]} 
-                                        onSubmitEditing={()=>{this.foucusNextField(num+1)}}
-                                        onChangeText={(text)=>this.onChangeText(text,'d'+num)}
-                                        ref={num}
-                                    />
+                                            key={index+'i1'}
+                                            style={[arr.length==5?styles.smallInput:styles.boxBottom,{borderColor:this.IsinArray('d'+num)?'red':'#ddd'}]}
+                                            underlineColorAndroid='transparent'
+                                            multiline={true}
+                                            textAlignVertical={arr.length==5?'center':'top'}
+                                            returnKeyType="next"
+                                            blurOnSubmit={true}
+                                            defaultValue={this.state.from['d'+num]} 
+                                            onSubmitEditing={()=>{this.foucusNextField(num+1)}}
+                                            onChangeText={(text)=>this.onChangeText(text,'d'+num)}
+                                            ref={num}
+                                            editable={false}
+                                        />
+                                         </TouchableOpacity>   
                                     )
                                 }):null}
                             </View>
@@ -114,9 +174,13 @@ class From2Input extends Component{
                     new Array(item.num).fill('').map( (item,index,arr)=>{
                         var num = ++count;
                         return(
+                            <TouchableOpacity  activeOpacity={1} onPress={()=>{
+                                var val = 'd'+num;
+                                this.IsAddMark(val)
+                            }} >   
                             <TextInput 
                                 key={index+'i1'}
-                                style={arr.length==5?styles.smallInput:styles.boxBottom}
+                                style={[arr.length==5?styles.smallInput:styles.boxBottom,{borderColor:this.IsinArray('d'+num)?'red':'#ddd'}]}
                                 underlineColorAndroid='transparent'
                                 multiline={true}
                                 textAlignVertical='top'
@@ -128,6 +192,7 @@ class From2Input extends Component{
                                 ref={num}
                                 editable={false}
                             />
+                            </TouchableOpacity> 
                         )
                     })
                  :!item.subTitle?null
@@ -144,19 +209,25 @@ class From2Input extends Component{
                                     {item.num ? new Array(item.num).fill('').map((item,index,arr)=>{
                                         var num = ++count;
                                         return (
+                                            <TouchableOpacity  activeOpacity={1} onPress={()=>{
+                                                var val = 'd'+num;
+                                                this.IsAddMark(val)
+                                            }} >  
                                             <TextInput 
-                                            key={index+'i1'}
-                                            style={arr.length==5?styles.smallInput:styles.boxBottom}
-                                            underlineColorAndroid='transparent'
-                                            multiline={true}
-                                            textAlignVertical={arr.length==5?'center':'top'}
-                                            returnKeyType="next"
-                                            blurOnSubmit={true}
-                                            defaultValue={this.state.from['d'+num]} 
-                                            onSubmitEditing={()=>{this.foucusNextField(num+1)}}
-                                            onChangeText={(text)=>this.onChangeText(text,'d'+num)}
-                                            ref={num}
-                                        />
+                                                key={index+'i1'}
+                                                style={[arr.length==5?styles.smallInput:styles.boxBottom,{borderColor:this.IsinArray('d'+num)?'red':'#ddd'}]}
+                                                underlineColorAndroid='transparent'
+                                                multiline={true}
+                                                textAlignVertical={arr.length==5?'center':'top'}
+                                                returnKeyType="next"
+                                                blurOnSubmit={true}
+                                                defaultValue={this.state.from['d'+num]} 
+                                                onSubmitEditing={()=>{this.foucusNextField(num+1)}}
+                                                onChangeText={(text)=>this.onChangeText(text,'d'+num)}
+                                                ref={num}
+                                                editable={false}
+                                            />
+                                            </TouchableOpacity> 
                                         )
                                     }):null}
                                 </View>
@@ -169,19 +240,25 @@ class From2Input extends Component{
                                                 {item.num ? new Array(5).fill('').map((item,index,arr)=>{
                                                     var num = ++count;
                                                     return (
+                                                        <TouchableOpacity  activeOpacity={1} onPress={()=>{
+                                                            var val = 'd'+num;
+                                                            this.IsAddMark(val)
+                                                        }} > 
                                                         <TextInput 
-                                                        key={index+'i1'}
-                                                        style={arr.length==5?styles.smallInput:styles.boxBottom}
-                                                        underlineColorAndroid='transparent'
-                                                        multiline={true}
-                                                        textAlignVertical={arr.length==5?'center':'top'}
-                                                        returnKeyType="next"
-                                                        blurOnSubmit={true}
-                                                        defaultValue={this.state.from['d'+num]} 
-                                                        onSubmitEditing={()=>{this.foucusNextField(num+1)}}
-                                                        onChangeText={(text)=>this.onChangeText(text,'d'+num)}
-                                                        ref={num}
-                                                    />
+                                                            key={index+'i1'}
+                                                            style={[arr.length==5?styles.smallInput:styles.boxBottom,{borderColor:this.IsinArray('d'+num)?'red':'#ddd'}]}
+                                                            underlineColorAndroid='transparent'
+                                                            multiline={true}
+                                                            textAlignVertical={arr.length==5?'center':'top'}
+                                                            returnKeyType="next"
+                                                            blurOnSubmit={true}
+                                                            defaultValue={this.state.from['d'+num]} 
+                                                            onSubmitEditing={()=>{this.foucusNextField(num+1)}}
+                                                            onChangeText={(text)=>this.onChangeText(text,'d'+num)}
+                                                            ref={num}
+                                                            editable={false}
+                                                        />
+                                                     </TouchableOpacity> 
                                                     )
                                                 }):null}
                                             </View>
@@ -204,20 +281,25 @@ class From2Input extends Component{
                                              {item.num ? new Array(item.num).fill('').map((item,index,arr)=>{
                                                  var num = ++count;
                                                 return (
+                                                    <TouchableOpacity  activeOpacity={1} onPress={()=>{
+                                                        var val = 'd'+num;
+                                                        this.IsAddMark(val)
+                                                    }} > 
                                                     <TextInput 
-                                                    key={index+'i1'}
-                                                    style={arr.length==5?styles.smallInput:styles.boxBottom}
-                                                    underlineColorAndroid='transparent'
-                                                    multiline={true}
-                                                    textAlignVertical={arr.length==5?'center':'top'}
-                                                    returnKeyType="next"
-                                                    blurOnSubmit={true}
-                                                    defaultValue={this.state.from['d'+num]}  
-                                                    onSubmitEditing={()=>{this.foucusNextField(num+1)}}
-                                                    onChangeText={(text)=>this.onChangeText(text,'d'+num)}
-                                                    ref={num}
-                                                    editable={false}
-                                                />
+                                                        key={index+'i1'}
+                                                        style={[arr.length==5?styles.smallInput:styles.boxBottom,{borderColor:this.IsinArray('d'+num)?'red':'#ddd'}]}
+                                                        underlineColorAndroid='transparent'
+                                                        multiline={true}
+                                                        textAlignVertical={arr.length==5?'center':'top'}
+                                                        returnKeyType="next"
+                                                        blurOnSubmit={true}
+                                                        defaultValue={this.state.from['d'+num]}  
+                                                        onSubmitEditing={()=>{this.foucusNextField(num+1)}}
+                                                        onChangeText={(text)=>this.onChangeText(text,'d'+num)}
+                                                        ref={num}
+                                                        editable={false}
+                                                    />
+                                                     </TouchableOpacity> 
                                                 )
                                             }):null}
                                             </View>
@@ -241,8 +323,6 @@ class From2Input extends Component{
       }
 }
 
-
-
 export default class InspectionDatePreview extends Component{
 
     constructor(props){
@@ -259,7 +339,8 @@ export default class InspectionDatePreview extends Component{
                 isFill:false
             },
             dataId:false,
-            waiting:false
+            waiting:false,
+            IsChecked:[]
         }
         navigation = this.props.navigation;
         this.from = navigation.getParam('from')
@@ -312,8 +393,11 @@ export default class InspectionDatePreview extends Component{
                     <View style={styles.from}>
                             <View style={styles.box}>
                                 <Text style={styles.boxL}>单位工程名称</Text>
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                       this.IsAddMark('h1')            
+                                }}>
                                 <TextInput 
-                                    style={styles.boxR}
+                                    style={[styles.boxR,{borderColor:this.IsinArray('h1')?'red':'#DDDDDD'}]}
                                     underlineColorAndroid='transparent'
                                     multiline={true}
                                     blurOnSubmit={true}
@@ -326,11 +410,15 @@ export default class InspectionDatePreview extends Component{
                                     onChangeText={(text)=>this.onChangeText(text,'h1')}
                                     editable={false}
                                 />
+                                </TouchableOpacity>
                             </View>
                             <View style={styles.box}>
                                 <Text style={styles.boxL}>分部工程名称</Text>
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                       this.IsAddMark('h2')            
+                                }}>
                                 <TextInput 
-                                    style={styles.boxR}
+                                    style={[styles.boxR,{borderColor:this.IsinArray('h2')?'red':'#DDDDDD'}]}
                                     underlineColorAndroid='transparent'
                                     multiline={true}
                                     blurOnSubmit={true}
@@ -343,11 +431,15 @@ export default class InspectionDatePreview extends Component{
                                     onChangeText={(text)=>this.onChangeText(text,'h2')}
                                     editable={false}
                                 />
+                                </TouchableOpacity>
                             </View>
                             <View style={styles.box}>
                                 <Text style={styles.boxL}>分项工程名称</Text>
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                       this.IsAddMark('h3')            
+                                }}>
                                 <TextInput 
-                                    style={styles.boxR}
+                                    style={[styles.boxR,{borderColor:this.IsinArray('h3')?'red':'#DDDDDD'}]}
                                     underlineColorAndroid='transparent'
                                     multiline={true}
                                     blurOnSubmit={true}
@@ -360,11 +452,15 @@ export default class InspectionDatePreview extends Component{
                                     editable={false}
 
                                 />
+                                 </TouchableOpacity>
                             </View>
                             <View style={styles.box}>
                                 <Text style={styles.boxL}>验收部门</Text>
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                       this.IsAddMark('h4')            
+                                }}>
                                 <TextInput 
-                                    style={styles.boxR}
+                                    style={[styles.boxR,{borderColor:this.IsinArray('h4')?'red':'#DDDDDD'}]}
                                     underlineColorAndroid='transparent'
                                     multiline={true}
                                     blurOnSubmit={true}
@@ -376,11 +472,15 @@ export default class InspectionDatePreview extends Component{
                                     onChangeText={(text)=>this.onChangeText(text,'h4')}
                                     editable={false}
                                 />
+                                </TouchableOpacity>
                             </View>
                             <View style={styles.box}>
                                 <Text style={styles.boxL}>施工单位</Text>
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                       this.IsAddMark('h5')            
+                                }}>
                                 <TextInput 
-                                    style={styles.boxR}
+                                    style={[styles.boxR,{borderColor:this.IsinArray('h5')?'red':'#DDDDDD'}]}
                                     underlineColorAndroid='transparent'
                                     multiline={true}
                                     blurOnSubmit={true}
@@ -392,11 +492,15 @@ export default class InspectionDatePreview extends Component{
                                     onChangeText={(text)=>this.onChangeText(text,'h5')}
                                     editable={false}
                                 />
+                                </TouchableOpacity>
                             </View>
                             <View style={styles.box}>
                                 <Text style={styles.boxL}>项目负责人</Text>
+                                <TouchableOpacity activeOpacity={1} onPress={()=>{  
+                                       this.IsAddMark('h6')            
+                                }}>
                                 <TextInput 
-                                    style={styles.boxR}
+                                    style={[styles.boxR,{borderColor:this.IsinArray('h6')?'red':'#DDDDDD'}]}
                                     underlineColorAndroid='transparent'
                                     multiline={true}
                                     blurOnSubmit={true}
@@ -406,6 +510,7 @@ export default class InspectionDatePreview extends Component{
                                     onChangeText={(text)=>this.onChangeText(text,'h6')}
                                     editable={false}
                                 />
+                                 </TouchableOpacity>
                             </View>
                         </View> 
                      </Panel>
@@ -413,7 +518,7 @@ export default class InspectionDatePreview extends Component{
                     {json['table'+this.code].master.length>0?
                     <Panel title="主控项目检查评定记录" >
                      <View style={styles.from}>  
-                        <From2Input   flag={1}  salt={this.salt}  saveS={this.saveS} />
+                        <From2Input   flag={1}  salt={this.salt}  saveS={this.saveS}  updataMark={(val)=>{this.updataMark(val)}}  />
                      </View>  
                     </Panel>
                     :null}
@@ -421,7 +526,7 @@ export default class InspectionDatePreview extends Component{
                     {json['table'+this.code].ordinary.length>0?
                     <Panel title="一般项目检查评定记录" >
                         <View style={styles.from}>                                              
-                            <From2Input  flag={2}  salt={this.salt} saveS={this.saveS} />  
+                            <From2Input  flag={2}  salt={this.salt} saveS={this.saveS} updataMark={(val)=>{this.updataMark(val)}} />  
                         </View>
                     </Panel> 
                     :null}         
@@ -430,11 +535,10 @@ export default class InspectionDatePreview extends Component{
                         <View style={styles.from}>                                              
                             <View style={styles.box}>
                                 <TouchableOpacity activeOpacity={1} onPress={()=>{  
-                                    if( typeof this.state.from.f1.checked == 'undefined'){
-                                    }                           
+                                       this.IsAddMark('f1')            
                                 }}>
                                 <TextInput 
-                                        style={[styles.boxR]}
+                                        style={[styles.boxR,{borderColor:this.IsinArray('f1')?'red':'#DDDDDD'}]}
                                         underlineColorAndroid='transparent'
                                         multiline={true}
                                         textAlignVertical='top'
@@ -595,13 +699,25 @@ export default class InspectionDatePreview extends Component{
                         </TouchableOpacity>
                     </View>
                     :null}
+
             </View>                    
-
         
-
         </View>
             
         )
+    }
+
+
+    /**
+     * 延迟点击
+     */
+
+    _repeatClick = (method) =>{
+        this.setState({waiting: true});
+        this.operation(method)
+        setTimeout(()=>{
+            this.setState({waiting: false})
+        },1000)
     }
 
     /**
@@ -613,13 +729,19 @@ export default class InspectionDatePreview extends Component{
         Storage.get('vtoken').then(data=>{
 
             data = data||''
-            var id =navigation.getParam('dataId')||this.salt.split('-')[0]
+            var id =navigation.getParam('dataId')||this.salt.split('-')[0];
             // console.warn(id);
+            var detail =this.state.IsChecked;
+
             let fromdata = new FormData()
             fromdata.append('id',id)
             fromdata.append('operation',num)
             fromdata.append('vtoken',data)
-    
+            
+            if(this.state.subject.isVerify&&this.state.verifyDate.status == 1&&num == 0){             
+                fromdata.append('detail',JSON.stringify(detail))              
+            }
+            
             fetch(operate,{
                 method:'POST',
                 body:fromdata,
@@ -633,18 +755,17 @@ export default class InspectionDatePreview extends Component{
                     var vtoken = response.headers.get('vtoken')
                     Storage.save('vtoken',vtoken)
                 }
+         
                 return response.json()
             })
             .then((responseJson) => {
                 if(responseJson.statusCode == 200){
-                    this.props.navigation.pop()
+                    this.props.navigation.pop()                 
                 }
             })
 
         })
     }
-
-
 
     /**
      * 加载数据
@@ -679,29 +800,38 @@ export default class InspectionDatePreview extends Component{
                 return false;
             }else{
                 var json = JSON.parse(responseJson.data.verifyData.content),
-                    verifyDate = responseJson.data.verifyData;
+                    verifyDate = responseJson.data.verifyData;         
+                    var IsChecked;
+                    var isVerify = this.state.subject.isVerify,
+                        isFill = this.state.subject.isFill,
+                        status = verifyDate.status,
+                        prevStatus = verifyDate.prevStatus,
+                        prevOperation = verifyDate.prevOperation;
+
+                    if(responseJson.data.verifyData.prevDetail && (isVerify || isFill) && status ==0 && prevStatus==1 && prevOperation==0){
+                        IsChecked =  JSON.parse(responseJson.data.verifyData.prevDetail)
+                    }else{
+                        IsChecked =[]
+                    }
+
                 this.setState({
                     from:json,
-                    verifyDate:verifyDate
-                })
+                    verifyDate:verifyDate,
+                    IsChecked:IsChecked
+                })               
+                
+                DeviceEventEmitter.emit('makeFrom', json)
+                DeviceEventEmitter.emit('makeCheck', IsChecked)
+                DeviceEventEmitter.emit('verifyDate', verifyDate)
+                
             }
         })
     }
 
-    /**
-     * 延迟点击
-     */
-
-    _repeatClick(method){
-        this.setState({waiting: true});
-        this.operation(method)//这里写你原本要交互的方法
-        setTimeout(()=> {
-            this.setState({waiting: false})
-        }, 2000);//设置的时间间隔由你决定
-    }
-
 
      componentDidMount(){
+
+        /**check*/
 
         Storage.get('subject').then((data)=>{
             if(data!=null){
@@ -736,6 +866,37 @@ export default class InspectionDatePreview extends Component{
 
      }
 
+     ArrayRemove = (arr,item) =>{
+        var index = arr.indexOf(item)
+        if(index>-1){
+            arr.splice(index,1)
+        }
+     }
+
+     IsAddMark=(val)=>{
+
+         var isVerify = this.state.subject.isVerify,
+             status  = this.state.verifyDate.status;
+
+        if(!isVerify||status!=1){return}
+
+        var ArrIsChecked = this.state.IsChecked
+        if(ArrIsChecked.includes(val)){
+            this.ArrayRemove(ArrIsChecked,val)
+        }else{
+            ArrIsChecked.push(val)
+        }   
+        this.updataMark(ArrIsChecked)
+        DeviceEventEmitter.emit('makeCheck', this.state.IsChecked)
+     }
+
+     updataMark = (IsChecked) =>{
+        this.setState({IsChecked:IsChecked})
+     }
+    
+     IsinArray= (val) =>{
+         return this.state.IsChecked.includes(val)
+     }
 
 }
 
